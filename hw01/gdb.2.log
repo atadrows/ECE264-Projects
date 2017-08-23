@@ -1,0 +1,25 @@
+Breakpoint 1 at 0x400601: file prime_factor.c, line 17.
+Starting program: /home/shay/a/ebertn/264/hw01/prime_factor 
+
+Breakpoint 1, print_prime_factors (n=6) at prime_factor.c:17
+17	    if(n <= 0) {
+Continuing.
+
+Breakpoint 1, print_prime_factors (n=1) at prime_factor.c:17
+17	    if(n <= 0) {
+Continuing.
+
+Breakpoint 1, print_prime_factors (n=0) at prime_factor.c:17
+17	    if(n <= 0) {
+Continuing.
+
+Breakpoint 1, print_prime_factors (n=48) at prime_factor.c:17
+17	    if(n <= 0) {
+Continuing.
+
+Breakpoint 1, print_prime_factors (n=49) at prime_factor.c:17
+17	    if(n <= 0) {
+Execute until the program reaches a source line greater than the current
+or a specified location (same args as break command) within the current frame.
+print_prime_factors (n=49) at prime_factor.c:34
+34	            for(int i = 3; i * i < n; i += 2) {
