@@ -1,0 +1,13 @@
+x = 25
+I have 6 hampsters and 1 fish
+12 is 0xc in hex
+-12 is -0b1100 in binary
+Bank balance: $13.10
+$15.65 is like a milli where I'm from
+Am poor. Have -$2.16 monies
+Unnecessary argument: "here I am"
+My favorite char = b
+My second fav char = 3
+35% of statistics are made up
+there is an error of 3% percent
+Lone parent: %

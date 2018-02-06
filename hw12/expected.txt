@@ -1,0 +1,22 @@
+Original list: 0->2->4->NULL
+3 - 0 = 3
+3 - 2 = 1
+3 - 4 = -1
+Middle insert: 0->2->3->4->NULL
+-8 - 0 = -8
+Head insert: -8->0->2->3->4->NULL
+20 - -8 = 28
+20 - 0 = 20
+20 - 2 = 18
+20 - 3 = 17
+20 - 4 = 16
+Tail insert: -8->0->2->3->4->20->NULL
+Dequeued list: 0->2->3->4->20->NULL
+Dequeued head: -8->NULL
+Stack push: 100->0->2->3->4->20->NULL
+Dequeued list: 0->2->3->4->20->NULL
+Dequeued first: 100->NULL
+Lastless list: 0->2->3->4->NULL
+Removed node: 20->NULL
+0->2->4->NULL
+./huffman->NULL

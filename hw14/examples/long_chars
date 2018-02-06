@@ -1,0 +1,709 @@
+
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=720, user-scalable=yes">
+  <link rel="stylesheet" href="/ece264/17au/static/main.css">
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+
+  <title>Advanced C Programming :: HW14</title>
+
+<style>
+table.character_table#sample_huffman_7x9 > * > tr:first-child > td:nth-child(3),
+.red_highlight { 
+  font-weight: bold;
+  background-color: orange;
+}
+table.character_table#sample_huffman_7x9 > * > tr:first-child > td:nth-child(6),
+table.character_table#sample_huffman_7x9 > * > tr:last-child > td:nth-child(6),
+.green_highlight {
+  background-color: lightgreen;
+}
+table.character_table > * > tr > td {
+  padding: 0;
+  margin: 0;
+  vertical-align: middle;
+  width: 0.5em;
+}
+table.character_table#sample_huffman_7x9 {
+  font-size: 150%;
+}
+td.newline {
+  font-size: 60%;
+  color: gray;
+}
+</style>
+
+<!-- Enable MATHJAX -->
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({ tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]} });
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"
+        type="text/javascript" async ></script>
+</head>
+<body class="">
+
+  <h1 class="masthead"><a href="/ece264/17au/">Advanced C Programming</a></h1>
+  <h3 class="masthead">
+    Fall 2017 ::
+    ECE 264 ::
+    Purdue University
+  </h3>
+
+  <table id="navbar">
+  <tbody>
+  <tr>
+      <td class="">
+        <a href="/ece264/17au/">Home</a>
+      </td>
+      <td class="">
+        <a href="/ece264/17au/schedule">Schedule</a>
+      </td>
+      <td class="">
+        <a href="/ece264/17au/policies">Syllabus</a>
+      </td>
+      <td class="">
+        <a href="/ece264/17au/resources">Resources</a>
+      </td>
+      <td class="">
+        <a href="/ece264/17au/code_quality">Standards</a>
+      </td>
+      <td class="">
+        <a href="/ece264/17au/scores">Scores</a>
+      </td>
+    <td style="min-width:2em; padding: 0;">
+      <a href="https://piazza.com/class/j6likqvgltq6o2" title="Piazza" target="_blank"><img src="/ece264/17au/static/piazza.24x24.png" alt=""Piazza"" width="24" height="24"></a>
+    </td>
+    <!--
+    <td style="min-width:2em">
+      <a href="https://mycourses.purdue.edu/webapps/blackboard/execute/launcher?type=Course&amp;id=_273224_1&url=" target="_blank"><img src="https://mycourses.purdue.edu/ui/bb-icon2.ico" alt="Blackboard icon" width="24" height="24" style="vertical-align:middle"></a>
+    </td>
+    -->
+  </tr>
+  </tbody>
+  </table>
+
+
+
+
+  <div id="content">
+  <div id="due_date" style="float:right">Due 11/29</div>
+  <h1 id="page_title" class="page_title">Huffman #3 (A)</h1>
+  <div id="hw_body">
+
+<p>
+  This exercise will familiarize you with linked lists, which you will need for
+a subsequent programming assignment.
+</p>
+
+<!--
+<h2>Learning goals</h2>
+
+<p>You should learn:</p>
+<ol>
+  <li>To learn to create and manipulate linked lists.</li>
+  <li>To learn to free the memory associated with a linked list.</li>
+</ol>
+-->
+<h2>Getting Started</h2>
+<p>
+  Start by getting the files. Type <code class="to_type">264get hw14</code> and then
+  <code class="to_type">cd hw14</code> from bash.
+  <br>
+  You will get the following files:
+    <ol>
+      <li>huffman.h: An empty header file, you have to define your own functions in this homework.</li>
+      <li>huffman.c: An empty c file, you have to define your own functions in this homework.</li>
+      <li>huffman_main.c: You will use self defined functions to implement the huffman coding in this file. See requirements for detail</li>
+      <li>examples: A folder with examples of input and output file.</li>
+    </ol>
+    Same as <a href="/ece264/17au/hw/HW13">HW13</a>, you have the flexibility to design your functions in this homework. 
+
+<h2>Overview</h2>
+<p>
+  
+We assume that you have read the <a href="https://engineering.purdue.edu/ece264/17au/hw/HW13?alt=huffman" target="_blank">huffman coding</a> and successfully
+completed <a href="/ece264/17au/hw/HW12">HW12</a> and <a href="/ece264/17au/hw/HW13">HW13</a>.  At this point, you should be able to construct a Huffman coding tree from a non-empty input file.
+<p>
+This assignment deals with the representation of a Huffman coding tree
+using a series of characters, or more economically using a series of
+bits.  For more details, see the section "Header Information"
+in <a href="https://engineering.purdue.edu/ece264/17au/hw/HW13?alt=huffman" target="_blank">huffman coding</a>.  That section describes how a compressed file can be 
+represented.  Our focus is on how the topology of the Huffman
+coding tree can be represented in the compressed file.  
+</p>
+<p>
+The following description is adapted from that section:
+
+To represent a Huffman coding tree, we use a post-order traversal, 
+writing each node visited.  Post-order means that the writing of a node
+occurs after visiting the child nodes.  When you encounter a leaf node, you 
+write a 1 followed by the ASCII character of the leaf node. When you 
+encounter a non-leaf node, you write a 0. To indicate the end of the Huffman 
+coding tree, we write another 0.
+</p>
+<p>
+Consider the following two examples, the header information of the string "go go gophers" is "1g1o01s1 01e1h01p1r00000". The post-order traversal of the Huffman 
+coding tree gives us "1g1o01s1 01e1h01p1r0000". Another "0" indicates 
+the end of the topology (see <a href="https://engineering.purdue.edu/ece264/17au/hw/HW13?alt=huffman" target="_blank">huffman coding</a> for the topology).
+<table class="light">
+  <thead>
+    <tr>
+     <th>String</th>
+     <th>Header information</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>go go gophers</td>
+      <td>1g1o01s1 01e1h01p1r0000<span style="color:red">0</span></td>
+    </tr>
+    <tr>
+      <td>streets are stone stars are not</td>
+      <td>1t1a1r001n1o01 01e1s000<span style="color:red">0</span></td>
+    </tr>
+  </tbody>
+</table>
+
+</p>
+<p>
+In these two examples, we use characters 0 and 1 to distinguish between 
+non-leaf and leaf nodes (and 0 to indicate the end of a topology). As there are 
+eight leaf nodes in each of the two examples, there are eight 1's, seven 0's 
+for non-leaf nodes, and another <span style="color:red">0</span> to indicate that we have reached the 
+end of a topology. This approached used a total of 24 bytes.
+</p>
+<h3>Using bits to represent the header information</h3>
+<p>
+The header information can be made more economical if we use bits 0 and 1 
+to distinguish between non-leaf and leaf nodes, and also to indicate the end 
+of a topology. In these two examples, there will be a total of 10 bytes 
+(8 bytes for the leaf nodes(i.e., 'g', 'o', 'p' ... etc in 'go go gophers') and 2 bytes for all the bits 0's and 1's (i.e., 0's and 1's used in header information to distinguish non-leaf and leaf nodes. )).  
+
+<table class="light">
+  <thead>
+    <tr>
+     <th style="text-align:left">Header information</th>
+     <td> <span style="color:blue">1</span><span style="color:red">t</span><span style="color:green">1</span><span style="color:orange">a</span>1r001n1o01 01e1s0000</td>
+    </tr>
+    <tr>
+      <th style="text-align:left">Header information(bit)</th>
+      <td><span style="color:blue">1</span><span style="color:red">01110100</span><span style="color:green">1</span><span style="color:orange">01100001</span>...</td>
+    </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+
+For example, in the bit-based approach, the first 16 bits (or the first 2 bytes) 
+of the header information for encoding the string "streets are stone stars are 
+not" are <span style="color:blue">1</span><span style="color:red">0111010 0</span><span style="color:green">1</span><span style="color:orange">011000</span> (note that the space in the bit stream is 
+introduced for better clarity). The ASCII coding for 't' straddles the two 
+bytes, 7 bits in the first byte and 1 bit in the second byte. The second most 
+significant bit in the second byte is a 1, indicating that the next 8 bits is 
+an ASCII character, of which the the most significant 6 bits of the character 
+'a' is contained in the least significant 6 bits of the second byte.
+</p>
+<p>
+In the bit-based representation of the Huffman coding tree, the last byte may 
+not contain 8 meaningful bits. In this case, we pad it with 0 bits. Consider 
+the case where the input file uses nine distinct ASCII characters. The number 
+of bits required to represent the Huffman coding tree is 9×8 + 9×2 = 90 bits, 
+which can be represented by 12 bytes. In other words, the last byte should 
+contain only two useful bits. The least significant 6 bits should be padded 
+with 0's.
+</p>
+
+<h3>Expected arguments for executable</h3>
+We expect the huffman executable to accept 4 arguments:
+
+<code class="to_type"> ./huffman input_file output_file_1 output_file_2 output_file_3</code>
+<br>
+The executable should build a Huffman coding tree based on the input file
+(input_file) according to the description in <a href="/ece264/17au/hw/HW13">HW13</a>, and produce three output
+files.  The examples folder provide some sample input files: gophers, lorum, 
+stone, woods.
+
+<table class="light required_files">
+  <thead>
+    <tr>
+      <th>file</th>
+      <th colspan="2">contents</th>
+    </tr>
+   </thead>
+   <tbody>
+    <tr>
+      <td><var>output_file_1</td>
+       <td>
+        <ol>
+          <li>
+          The file contains as many lines as the number of distinct 
+          characters that appear in the input file. </li>
+          <li>Each distinct character should have a line in this output file with the format of <br>character:stream_of_0_and_1</b> </li>      
+          where the stream of 0 and 1 (as character '0' and character '1') being
+          the binary pattern corresponding to the Huffman code of the character.</li>
+          <li>
+          The order in which you print the characters is based on a tree traversal of 
+          the Huffman coding tree that visits the left branch first, followed by
+          the right branch.</li>  
+          <li>The corresponding output files for the input files in the 
+          examples folder are <b>gophers.huffman, lorum.huffman, stone.huffman, and 
+          woods.huffman</b>.</li>
+          
+          <li>Note that this is the last output file expected of huffman, the executable produced in <a href="/ece264/17au/hw/HW13">HW13</a>.</li>
+          </ol>
+       </td>
+    </tr>
+    <tr>
+      <td><var>output_file_2</var></td>
+       <td>
+        <ol>
+          <li>The file contains a representation of the Huffman coding
+          tree using a stream of characters obtained using a post-order traversal of
+          the Huffman coding tree as described above.</li>  
+          <li>The corresponding output files 
+          for the input files in the examples folder are <b>gophers.char, lorum.char,
+          stone.char, and woods.char<b>.</li>
+         </ol>
+       </td>
+     </tr>
+     <tr>
+      <td><var>output_file_3</var></td>
+      <td>
+        <ol>
+          <li>The file contains a representation of the Huffman coding
+        tree using a stream of bits obtained using a post-order traversal of
+        the Huffman coding tree as described above.  </li>
+          <li>The bit stream would have to be represented as characters in the output file.</li>
+           <li>The last character/byte in the output file may contain padding bits of 0 in the less significant positions. </li>
+           <li>The corresponding output files for the input files in the examples folder are <b>gophers.bit, lorum.bit, stone.bit, and woods.bit</b>.</li>
+       </td>
+     </tr>
+   </tbody>
+</table>
+<br>
+The output files for the example gophers were generated with the 
+following command:
+
+<code class="to_type"> ./huffman examples/gophers examples/gophers.huffman examples/gophers.char examples/gophers.bit</code>
+</p>
+
+
+<h2> Bit-wise operations </h2>
+<p>
+
+You would have to use bit-wise operations in one or more functions to
+complete this assignment.  In particular, these are operations that
+would be useful:
+
+<table class="light">
+  <thead>
+    <tr>
+      <th>Operations</th>
+      <th colspan="2">Descriptions</th>
+    </tr>
+   </thead>
+   <tbody>
+    <tr>
+      <td style="text-align:center">&gt;&gt;</td>
+      <td>shift right operator</td>
+    </tr>
+    <tr>
+      <td style="text-align:center">&lt;&lt;</td>
+      <td>shift left operator</td>
+    </tr>
+    <tr>
+      <td style="text-align:center">&amp;</td>
+      <td>bit-wise and operator</td>
+    </tr>
+    <tr>
+      <td style="text-align:center">|</td>
+      <td>bit-wise or operator</td>
+    </tr>
+   </tbody>
+</table>
+<p>
+Note that when a shift right operator is applied to signed representation
+(char, short, int, or long), the signed bit (bit in the most significant
+position of a 8-bit, 16-bit, 32-bit, or 64-bit number) is preserved.  
+In other words, after shifting, the polarity of the number, i.e., whether
+the number is positive or negative, is preserved.  For an unsigned 
+representation, 0 is shifted into the most significant bit.   
+</p>
+<p>
+Suppose we are using an int to store a char (i.e., only the least significant
+byte of an int is used to store the useful information), and we are 
+interested in splitting the char into two parts: 3 most significant
+bits and 5 least significant bits, and then exchange the parts such
+that the 3 bits now occupy the least significant positions and the
+5 bits now occupy the most signficant positions:
+</p>
+
+<pre class="">
+  int old_ch;  // the original char
+  int mask = 0xFF;  // a mask of all ones, 0x means hexadecimal, F is 1111
+  int MS_mask = (mask &gt;&gt; 5) &lt;&lt; 5;  // create a mask of 3 bits of 1 at most
+                                   // significant positions, 0xE0
+  int LS_mask = mask &gt;&gt; 3;         // create a mask of 5 bits of 1 at least
+                                   // significant positions, 0x1F
+  int LS_3_bits = (MS_mask &amp; old_ch) &gt;&gt; 5;  // get the least significant 3 bits
+                                            // of the new byte
+  int MS_5_bits = (LS_mask &amp; old_ch) &lt;&lt; 3;  // get the most significant 5 bits
+                                            // of the new byte
+  int new_ch = LS_3_bits | MS_5_bits;  // get the new char 
+</pre>
+
+<p>
+Note that by using an <var>int</var> to store a <var>char</var>, we do not have to worry how
+the polarity may be affected by shifting. 
+</p>
+<p>
+In this code fragment, we use shifting to create masks (<var>MS_mask</var> and <var>LS_mask</var>)
+of 1 bits from the variable mask.  These masks are used to extract 3 bits and 
+5 bits from <var>old_ch</var> using the bit-wise and operator.  Moreover, the extracted 
+bits are moved to correct positions using the shift operators.  The
+variable <var>new_ch</var> is obtained by combining the extracted (and shifted) bits
+using the bit-wise or operator.
+</p>
+<p>
+Note that there are many ways to accomplish the above.  We chose a (laborious)
+way that, we think, demonstrates the operators and the use of masks.
+</p>
+
+<h2> How to check your output </h2>
+<style>
+  ruby.huffman_one, ruby.huffman_zero, ruby.huffman_char {
+    border: 1px solid gray;
+  }
+  ruby.huffman_one, ruby.huffman_zero {
+    color: green;
+    font-weight: bold;
+  }
+</style>
+<p>
+You can use "diff" command to check your output against those provided
+in the examples folder.
+</p>
+<p>
+A useful utilities is the <ins>xxd</ins> <del>hexdump</del> command.  It shows
+the contents of a file in the hexadecimal representation.  For example,
+<code class="to_type">xxd gophers.char</code> gives you…
+</p>
+<pre class="output_block">$ xxd gophers.char
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #997700; font-weight: bold">0000000</span>: <span style="color: #005588; font-weight: bold">3167</span> <span style="color: #005588; font-weight: bold">316f</span> <span style="color: #005588; font-weight: bold">3031</span> <span style="color: #005588; font-weight: bold">7331</span> <span style="color: #005588; font-weight: bold">2030</span> <span style="color: #005588; font-weight: bold">3165</span> <span style="color: #005588; font-weight: bold">3168</span> <span style="color: #005588; font-weight: bold">3031</span>  <span style="background-color: #fff0f0">1g1o01s1 01e1h01</span>
+<span style="color: #997700; font-weight: bold">0000010</span>: <span style="color: #005588; font-weight: bold">7031</span> <span style="color: #005588; font-weight: bold">7230</span> <span style="color: #005588; font-weight: bold">3030</span> <span style="color: #005588; font-weight: bold">3030</span>                      <span style="background-color: #fff0f0">p1r00000</span>
+</pre></div>
+</pre>
+<p>
+<p>
+The left most column is the starting byte count (in hexadecimal).
+The far right side of the output shows a rough interpretation of the bytes as ASCII
+characters (instead of the numeric values of the bytes).  Unprintable characters—in the range 0-31 and 127-255, including the newline and tab characters, for example—are displayed as a single
+period (“<samp>.</samp>”).
+In between, the contents of the file are listed in 2-byte groups, <em class="u">in same order they
+are stored in the file</em>.  For example, the first byte of
+gophers.char is <samp>0x31</samp>; the second byte is <samp>0x67</samp>.
+</p>
+
+<p>
+  If that grouping is confusing, you can add <code class="to_type">-g1</code>
+  to tell xxd to display the bytes separately.
+</p>
+<pre class="output_block">$ xxd -g1 gophers.char
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #997700; font-weight: bold">0000000</span>: <span style="color: #005588; font-weight: bold">31</span> <span style="color: #005588; font-weight: bold">67</span> <span style="color: #005588; font-weight: bold">31</span> <span style="color: #005588; font-weight: bold">6f</span> <span style="color: #005588; font-weight: bold">30</span> <span style="color: #005588; font-weight: bold">31</span> <span style="color: #005588; font-weight: bold">73</span> <span style="color: #005588; font-weight: bold">31</span> <span style="color: #005588; font-weight: bold">20</span> <span style="color: #005588; font-weight: bold">30</span> <span style="color: #005588; font-weight: bold">31</span> <span style="color: #005588; font-weight: bold">65</span> <span style="color: #005588; font-weight: bold">31</span> <span style="color: #005588; font-weight: bold">68</span> <span style="color: #005588; font-weight: bold">30</span> <span style="color: #005588; font-weight: bold">31</span>  <span style="background-color: #fff0f0">1g1o01s1 01e1h01</span>
+<span style="color: #997700; font-weight: bold">0000010</span>: <span style="color: #005588; font-weight: bold">70</span> <span style="color: #005588; font-weight: bold">31</span> <span style="color: #005588; font-weight: bold">72</span> <span style="color: #005588; font-weight: bold">30</span> <span style="color: #005588; font-weight: bold">30</span> <span style="color: #005588; font-weight: bold">30</span> <span style="color: #005588; font-weight: bold">30</span> <span style="color: #005588; font-weight: bold">30</span>                          <span style="background-color: #fff0f0">p1r00000</span>
+</pre></div>
+</pre>
+<p>
+  You can do the same for gophers.bit:
+</p>
+<pre class="output_block">$ xxd gophers.bit
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #997700; font-weight: bold">0000000</span>: <span style="color: #005588; font-weight: bold">b3db</span> <span style="color: #005588; font-weight: bold">d739</span> <span style="color: #005588; font-weight: bold">02cb</span> <span style="color: #005588; font-weight: bold">685c</span> <span style="color: #005588; font-weight: bold">2e40</span>       <span style="background-color: #fff0f0">          ...9..h\.@</span>
+</pre></div>
+</pre>
+<p>
+  … or displaying one byte at a time…
+</p>
+<pre class="output_block">$ xxd -g1 gophers.bit
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #997700; font-weight: bold">0000000</span>: <span style="color: #005588; font-weight: bold">b3</span> <span style="color: #005588; font-weight: bold">db</span> <span style="color: #005588; font-weight: bold">d7</span> <span style="color: #005588; font-weight: bold">39</span> <span style="color: #005588; font-weight: bold">02</span> <span style="color: #005588; font-weight: bold">cb</span> <span style="color: #005588; font-weight: bold">68</span> <span style="color: #005588; font-weight: bold">5c</span> <span style="color: #005588; font-weight: bold">2e</span> <span style="color: #005588; font-weight: bold">40</span>          <span style="background-color: #fff0f0">          ...9..h\.@</span>
+</pre></div>
+</pre>
+<p>
+  You can also view the bytes in binary notation by adding
+  <code class="to_type">-b</code>.
+</p>
+<pre class="output_block">$ xxd -b gophers.bit
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #997700; font-weight: bold">0000000</span>: <span style="color: #005588; font-weight: bold">10110011</span> <span style="color: #005588; font-weight: bold">11011011</span> <span style="color: #005588; font-weight: bold">11010111</span> <span style="color: #005588; font-weight: bold">00111001</span> <span style="color: #005588; font-weight: bold">00000010</span> <span style="color: #005588; font-weight: bold">11001011</span>  <span style="background-color: #fff0f0">...9..</span>
+<span style="color: #997700; font-weight: bold">0000006</span>: <span style="color: #005588; font-weight: bold">01101000</span> <span style="color: #005588; font-weight: bold">01011100</span> <span style="color: #005588; font-weight: bold">00101110</span> <span style="color: #005588; font-weight: bold">01000000</span>    <span style="background-color: #fff0f0">                h\.@</span>
+</pre></div>
+</pre>
+<p>
+  From that, you can directly see the bytes that your code will be writing to the file.
+  If it helps, you can add <code class="to_type">-g10 -c10</code> to omit the spaces.
+</p>
+<pre class="output_block">$ xxd -b -g10 -c10 gophers.bit
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #997700; font-weight: bold">0000000</span>: <span style="color: #005588; font-weight: bold">10110011110110111101011100111001000000101100101101101000010111000010111001000000</span>  <span style="background-color: #fff0f0">...9..h\.@</span>
+</pre></div>
+</pre>
+<p>
+  From there, you can imagine the boundaries between the marker bits (0 or 1) and the
+  bits comprise characters.
+</p>
+<pre class="output_block"><ruby class="huffman_one">1<rt>M</rt></ruby><ruby class="huffman_char">01100111<rt>char:'g'</rt></ruby><ruby class="huffman_one">1<rt>M</rt></ruby><ruby class="huffman_char">01101111<rt>char:'o'</rt></ruby><ruby class="huffman_zero">0<rt>M</rt></ruby><ruby class="huffman_one">1<rt>M</rt></ruby><ruby class="huffman_char">01110011<rt>char:'s'</rt></ruby><ruby class="huffman_one">1<rt>M</rt></ruby><ruby class="huffman_char">00100000<rt>char:' '</rt></ruby><ruby class="huffman_zero">0<rt>M</rt></ruby><ruby class="huffman_one">1<rt>M</rt></ruby><ruby class="huffman_char">01100101<rt>char:'e'</rt></ruby><ruby class="huffman_one">1<rt>M</rt></ruby><ruby class="huffman_char">01101000<rt>char:'h'</rt></ruby><ruby class="huffman_zero">0<rt>M</rt></ruby><ruby class="huffman_one">1<rt>M</rt></ruby><ruby class="huffman_char">01110000<rt>char:'p'</rt></ruby><ruby class="huffman_one">1<rt>M</rt></ruby><ruby class="huffman_char">01110010<rt>char:'r'</rt></ruby><ruby class="huffman_zero">0<rt>M</rt></ruby><ruby class="huffman_zero">0<rt>M</rt></ruby><ruby class="huffman_zero">0<rt>M</rt></ruby><ruby class="huffman_zero">0<rt>M</rt></ruby><ruby class="huffman_zero">0<rt>M</rt></ruby></pre>
+<aside class="ins update smaller">
+UPDATE:  If you read this assignment earlier, you may have noticed that the
+preceding section originally referred to the hexdump command, instead of xxd.
+They are similar, but xxd output is easier to read, because the bytes are
+in the same order they exist in the file.
+</aside>
+
+
+
+<h2>Requirements</h2>
+ <div>
+  <ol>
+  <li>Your submission must contain each of the following files, as specified:
+    <table class="light required_files">
+     <thead>
+       <tr>
+         <th>file</th>
+         <th colspan="2">contents</th>
+       </tr>
+     </thead>
+     <tbody>
+      <tr>
+          <td rowspan="1">huffman.h</td> 
+            <td rowspan="1">functions</td> 
+          <td>
+            You are given flexibility to define your own functions.
+          </td>
+      </tr>
+      <tr>
+          <td rowspan="1">huffman.c</td> 
+            <td rowspan="1">functions</td> 
+          <td>
+            You are given flexibility to define your own functions.
+          </td>
+      </tr>
+      <tr>
+          <td rowspan="1">huffman_main.c</td> 
+            <td rowspan="1">functions</td> 
+                <td>
+
+
+
+      <div class="required_item">
+        <code><b>main</b>(int argc, char✶ argv[])</code>
+      </div>
+
+        <div class="return_type">&rarr; <i>return type:</i> int</div>
+
+
+              <ol>
+                <li>
+                  Use self defined functions to implement huffman coding in this file. 
+                </li>
+                <li>
+                  The executable of this file takes one input_file and produces three output files. We expect 4 arguments, these arguments should be entered in the following order. 
+                    <ol>
+                      <li><var>input_file</var></li> 
+                      <li><var>output_file_1</var></li> 
+                      <li><var>output_file_2</var></li> 
+                      <li><var>output_file_3</var></li>
+                    </ol>
+                </li>
+                <li>
+                  The content of <var>output_file_1, output_file_2, output_file_3</var> should follow the format described above.
+                </li>
+                <li>
+                  If executable is not supplied with exactly 4 arguments, the function returns EXIT_FAILURE. 
+                </li>
+                </div></td>
+
+      </tr>
+     </tbody>
+    </table>
+    </li>
+    <li><span class='red'>&#9888;</span> You will not receive any credit if we fail to obtain "huffman".</li> 
+    <li><span class='red'>&#9888;</span> You will not receive any credit if we fail to obtain <var>output_file_1, output_file_2, and output_file_3</var>.</li>
+    <li><span class='red'>&#9888;</span> You will not receive any credit if the content of <var>output_file_1, output_file_2, and output_file3</var> do not follow the format as specified in homework description. </li>
+    <li>
+      <span class='red'>&#9888;</span> Do not print error messages or anything else on <code>stdout</code>
+      (i.e., with <code class="fn_name">printf(…)</code>), except as directed by the 
+      instructions.  Your <code class="fn_name">main(…)</code> can (and should) print
+      some output to <code>stdout</code>.
+    </li>
+    <li><span class='red'>&#9888;</span> Do not include a <code class="fn_name">main(…)</code> in huffman.c.  (→ zero credit, since we won't be able to compile.)</li>
+    <li>Submissions must meet the <a href="/ece264/17au/code_quality">code quality standards</a> and the <a href="/ece264/17au/policies">course policies</a> on homework and academic integrity.
+  </ol>
+ </div>
+
+<h2>Submit</h2>
+<p>
+  To submit HW14, type
+  <code class="to_type">264submit HW14 huffman.c huffman.h huffman_main.c</code>
+  from inside your hw14 directory.
+</p>
+
+<aside>
+<p>
+  In general, to submit any assignment for this course, you will use the following command:
+</p>
+<pre class="code_block to_type">264submit <span class="placeholder">ASSIGNMENT</span> <span class="placeholder">FILES…</span></pre>
+<p>
+  Submit often and early, even well before you are finished.  Doing so creates
+  a backup that you can retrieve in case of a problem (e.g.,
+  accidentally deleted your files).
+</p> 
+<p>
+  To retrieve your most recent submission, type <code>264get --restore <span class="placeholder">ASSIGNMENT</span></code> (e.g., <code>264get --restore hw14</code>).
+</p>
+<p>
+  To retrieve an earlier submission, first type <code>264get --list <span class="placeholder">ASSIGNMENT</span></code> to view your past submissions and find the timestamp of the one you want to retrieve.  Then, type 
+  <code>264get --restore -t <span class="placeholder">TIMESTAMP</span> <span class="placeholder">ASSIGNMENT</span></code>.
+</p>
+<p>
+  Scores will be posted to the <a href="/ece264/17au/scores">Scores</a> page after the
+  deadline for each assignment.
+</p>
+</aside>
+ 
+<!-- DELETED 9/7/2017
+<p class="ins">
+Update:  You do not need to submit  or Makefile for this exercise.
+</p>
+<h2>Summary </h2>
+ <ol>
+  <li><b>Compile</b>
+    <pre class="code_block to_type">gcc  huffman.c  -o huffman -lm</pre>
+  </li>
+  <li><b>Run</b>
+    <pre class="code_block to_type">./huffman 1 0.0 10.0 5</pre>
+  </li>
+  <li><b>Submit</b>
+    <pre class="code_block to_type"><code>264submit huffman.h huffman.c  </code></pre>
+  </li>
+  <li>Please read all instructions before asking for help.</li>
+ </ol>
+-->
+
+<h2 id="pretester">Pre-tester
+  <span style="color:green">●</span>
+</h2>
+<p>
+  The pre-tester for HW14 has    been released and is ready to use.
+</p>
+<aside>
+<h3 class='contents_omit'>Using the pretester</h3>
+<p>
+  The pretester is a tool for checking your work after you believe you are
+  done, and before we have scored it.  It is not a substitute for your own
+  checking, but it may help you avoid big surprises by letting you know if your
+  checking was not adequate.  To use the pre-tester, first submit your code.
+  Then, type the following command.  (<i>Do this only after you have submitted,
+  and only after you believe your submission is perfect.</i>)
+</p>
+<pre class="code_block to_type">264test hw14</pre>
+<p class="warning">
+  <strong>Do not ask TAs or instructors which tests you failed.</strong>
+</p>
+<p>
+Keep in mind:
+</p>
+<ul>
+  <li>Pre-testing is intended only for those who believe they are done and believe their submission is perfect.</li>
+  <li>The pre-tester is not part of the requirements of this or any other assignment.</li>
+  <li>You are responsible for reading the assignment carefully, and ensuring that your code meets all requirements.</li>
+  <li>Feedback is limited, to ensure that everyone learns to test their own code.</li>
+  <li>If your code is failing some tests, review <i>your tests</i> and make sure they are comprehensive enough to catch any bugs (deviations from requirements).  Follow the tips given by the pre-tester.</li>
+  <li>Code quality issues are not reported by the pre-tester; writing clean code is something you must learn to do from the start, not a clean-up step to do at the end.</li>
+</ul>
+<p>
+  Logistics:
+</p>
+<ul>
+  <li>If we discover that we have not checked some significant part of the assignment requirements, we may add additional tests at any time up to the point when scores are released.</li>
+  <li>The pre-tester will only be enabled after much of the class has submitted the assignment, and at least a few people have submitted perfect submissions.  This is to allow us to test the pre-tester.</li>
+  <li>The pre-tester checks your most recent submission.  You must submit first.</li>
+  <li>You may be limited to running the pre-tester ≤24 times in a 24-hour period.  (This is not implemented yet but will be added.)</li>
+</ul>
+</aside>
+
+
+<h1 id="qa">Q&amp;A</h1>
+<ol id="q_a">
+</ol>
+
+
+<h2>Updates</h2>
+<table><tbody>
+<tr>
+  <td>11/09/2017</td>
+  <td>draft</td>
+</tr>
+<tr>
+</tr>
+<tr>
+  <td></td>
+  <td></td>
+</tr>
+</table>
+
+  </div><script>
+jQuery(document).ready(function() {
+  var contents = [];
+  jQuery('#hw_body').find("h1,h2,h3").each(function(idx, element) {
+    var jq = jQuery(element);
+    if((element.id !== 'page_title' || element.id !== 'contents') && !jq.hasClass('contents_omit')) {
+      var id = element.id || "";
+      if(id === "") {
+        id = jq.text().replace(/[^-a-zA-Z0-9_]+/, "").toLowerCase();
+        while(document.getElementById(id) !== null) {
+          id += "_";
+        }
+        element.id = id;
+      }
+      contents.push(element);
+    }
+  });
+
+  var contents_div = jQuery('<div/>')
+    .attr('id', 'contents_container')
+    .insertAfter('#page_title');
+    //.insertAfter('#hw_body h2:first-of-type');
+
+  /*
+  jQuery('<h3/>')
+    .text('Contents')
+    .appendTo(contents_div);
+  */
+
+  var is_first = true;
+  for(var element of contents) {
+    var class_name = 'contents_' + element.tagName.toLowerCase();
+    if(is_first) {
+      class_name = 'contents_first';
+      is_first = false;
+    }
+    jQuery('<div/>')
+      .addClass(class_name)
+      .append(function() {
+        return jQuery('<a/>')
+          .attr('href', '#' + element.id)
+          .html(jQuery(element).html());
+      })
+      .appendTo(contents_div);
+  }
+});
+</script>
+  </div>
+
+  <div id="footer">
+    <hr>
+    &copy; Copyright 2017 Purdue University
+  </div>
+
+</body>
+</html>
+
